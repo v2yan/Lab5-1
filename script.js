@@ -4,13 +4,72 @@ const img = new Image(); // used to load image from <input> and draw to canvas
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
-  // TODO
+  // TODO 
+
+  // clear context 
+  const canvas = document.getElementById('user-image');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // fill w black background
+  ctx.rect(0,0, canvas.width, canvas.height);
+  ctx.fillStyle='black';
+  ctx.fill();
+
+
+  // generated correct dimensions for image 
+  let dim = getDimmensions(canvas.width, canvas.height, img.width, img.height);
+  let width = dim[Object.keys(dim)[0]];
+  let height = dim[Object.keys(dim)[1]];
+  let startX = dim[Object.keys(dim)[2]];
+  let startY = dim[Object.keys(dim)[3]];
+
+  // draw image on canvas
+  ctx.drawImage(img, startX, startY, width, height);
+  
+
+  // reset form for new image 
+  const form = document.getElementById('generate-meme');
+  form.reset();
+
+
+  // generate is enabled until pressed --> clear, read text enabled
+  // clear is enabled until pressed --> read text disabled, generate enabled 
+
+  // const gen = document.querySelector('button[type=submit]');
+  // const form = document.getElementById('generate-meme');
+  // form.addEventListener('submit', () => {
+  //   gen.disabled = true;
+  //   preventDefault();
+  // });
 
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
 });
+
+
+// updates img.src and img.alt when new image uploaded 
+const imgInput = document.getElementById('image-input');
+
+imgInput.addEventListener('change', () => {
+
+  // load in image
+  let fileList = imgInput.files;
+  let file = fileList.item(0);
+
+  // url for path + file name for alt
+  var filePath = URL.createObjectURL(file);
+  img.setAttribute('src', filePath);
+  img.setAttribute('alt', file.name);
+
+});
+
+
+
+
+
 
 /**
  * Takes in the dimensions of the canvas and the new image, then calculates the new
