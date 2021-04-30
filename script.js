@@ -1,14 +1,14 @@
 // script.js
 
 const img = new Image(); // used to load image from <input> and draw to canvas
+const canvas = document.getElementById('user-image');
+const ctx = canvas.getContext('2d');
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
   // TODO 
 
   // clear context 
-  const canvas = document.getElementById('user-image');
-  const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // fill w black background
@@ -19,10 +19,11 @@ img.addEventListener('load', () => {
 
   // generated correct dimensions for image 
   let dim = getDimmensions(canvas.width, canvas.height, img.width, img.height);
-  let width = dim[Object.keys(dim)[0]];
-  let height = dim[Object.keys(dim)[1]];
-  let startX = dim[Object.keys(dim)[2]];
-  let startY = dim[Object.keys(dim)[3]];
+  let dimArr = Object.keys(dim);
+  let width = dim[dimArr[0]];
+  let height = dim[dimArr[1]];
+  let startX = dim[dimArr[2]];
+  let startY = dim[dimArr[3]];
 
   // draw image on canvas
   ctx.drawImage(img, startX, startY, width, height);
@@ -32,22 +33,12 @@ img.addEventListener('load', () => {
   const form = document.getElementById('generate-meme');
   form.reset();
 
-
-  // generate is enabled until pressed --> clear, read text enabled
-  // clear is enabled until pressed --> read text disabled, generate enabled 
-
-  // const gen = document.querySelector('button[type=submit]');
-  // const form = document.getElementById('generate-meme');
-  // form.addEventListener('submit', () => {
-  //   gen.disabled = true;
-  //   preventDefault();
-  // });
-
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
 });
+
 
 
 // updates img.src and img.alt when new image uploaded 
@@ -66,9 +57,33 @@ imgInput.addEventListener('change', () => {
 
 });
 
+  // generate is enabled until pressed --> clear, read text enabled
+  // clear is enabled until pressed --> read text disabled, generate enabled 
+
+const generateBtn = document.querySelector('button[type=submit]');
+generateBtn.addEventListener('click', function(event) {
+  event.preventDefault();
+  generateBtn.disabled = true;
+  clearBtn.disabled = false;
+  readBtn.disabled = false;
+  let textTop = document.getElementById('text-top');
+  let textBottom = document.getElementById('text-bottom');
+});
 
 
+const clearBtn = document.querySelector('button[type=reset]');
+clearBtn.addEventListener('click', () => {
+  clearBtn.disabled = true;
+  generateBtn.disabled = false;
+  readBtn.disabled = true;
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
+
+const readBtn = document.querySelector('button[type=button]');
+readBtn.addEventListener('click', () => {
+  
+});
 
 
 /**
