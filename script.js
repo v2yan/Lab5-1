@@ -3,6 +3,48 @@
 const img = new Image(); // used to load image from <input> and draw to canvas
 const canvas = document.getElementById('user-image');
 const ctx = canvas.getContext('2d');
+let textTop;
+let textBottom;
+let voiceSelect = document.getElementById('voice-selection');
+let voices;
+voiceSelect.disabled = false;
+
+// code to populate voice list (mozilla docs)
+// removed the 'voice not available option from the list'
+// does not work in Chrome - https://stackoverflow.com/questions/41539680/speechsynthesis-speak-not-working-in-chrome
+
+function populateVoiceList() {
+  if (typeof speechSynthesis === 'undefined') {
+    return;
+  }
+
+  voices = speechSynthesis.getVoices();
+
+  for (let i = 0; i < voices.length; i++) {
+    var option = document.createElement('option');
+    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+
+    if (voices[i].default) {
+      option.textContent += ' -- DEFAULT';
+    }
+
+    option.setAttribute('data-lang', voices[i].lang);
+    option.setAttribute('data-name', voices[i].name);
+    voiceSelect.appendChild(option);
+  }
+
+  // remove the voice not available option (not from mozilla docs)
+
+  if (voices.length > 0) {
+    let noVoiceOption = document.querySelector('option[value=none]');
+    noVoiceOption.remove();
+  }
+}
+
+populateVoiceList();
+if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = populateVoiceList;
+}
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
@@ -12,8 +54,8 @@ img.addEventListener('load', () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // fill w black background
-  ctx.rect(0,0, canvas.width, canvas.height);
-  ctx.fillStyle='black';
+  ctx.rect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'black';
   ctx.fill();
 
 
@@ -27,7 +69,7 @@ img.addEventListener('load', () => {
 
   // draw image on canvas
   ctx.drawImage(img, startX, startY, width, height);
-  
+
 
   // reset form for new image 
   const form = document.getElementById('generate-meme');
@@ -38,8 +80,6 @@ img.addEventListener('load', () => {
   // - Clear the form when a new image is selected
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
 });
-
-
 
 // updates img.src and img.alt when new image uploaded 
 const imgInput = document.getElementById('image-input');
@@ -57,19 +97,28 @@ imgInput.addEventListener('change', () => {
 
 });
 
-  // generate is enabled until pressed --> clear, read text enabled
-  // clear is enabled until pressed --> read text disabled, generate enabled 
+// generate is enabled until pressed --> clear, read text enabled
+// clear is enabled until pressed --> read text disabled, generate enabled 
 
 const generateBtn = document.querySelector('button[type=submit]');
-generateBtn.addEventListener('click', function(event) {
+const readTextBtn = document.querySelector('button[type=button]');
+
+generateBtn.addEventListener('click', function (event) {
   event.preventDefault();
+
   generateBtn.disabled = true;
   clearBtn.disabled = false;
   readBtn.disabled = false;
-  let textTop = document.getElementById('text-top');
-  let textBottom = document.getElementById('text-bottom');
-});
 
+  // don't have to draw black bars (not drawn in no text example in vid)
+
+  textTop = document.getElementById('text-top').value;
+  textBottom = document.getElementById('text-bottom').value;
+  ctx.font = "30px Arial";
+  ctx.textAlign = "center";
+  ctx.strokeText(textTop, canvas.width / 2, 30);
+  ctx.strokeText(textBottom, canvas.width / 2, canvas.height - 20);
+});
 
 const clearBtn = document.querySelector('button[type=reset]');
 clearBtn.addEventListener('click', () => {
@@ -80,9 +129,36 @@ clearBtn.addEventListener('click', () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
+
+var synth = window.speechSynthesis;
+
 const readBtn = document.querySelector('button[type=button]');
+const volumeLevel = document.querySelector('input[type=range]');
+
 readBtn.addEventListener('click', () => {
-  
+
+  // create utterance from the text from top and bottom text fields
+
+  var utterThis = new SpeechSynthesisUtterance(textTop + " " + textBottom);
+
+  // assign correct voice for utterance (mozilla docs)
+
+  var selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
+  for (let i = 0; i < voices.length; i++) {
+    if (voices[i].name === selectedOption) {
+      utterThis.voice = voices[i];
+    }
+  }
+
+  // assign volume level
+
+  utterThis.volume = volumeLevel.value / 100;
+
+  // speak utterance
+
+  synth.speak(utterThis);
+
+
 });
 
 
