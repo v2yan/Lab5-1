@@ -175,7 +175,6 @@ volumeLevel.addEventListener('input', () => {
   } else {
     icon.src = 'icons/volume-level-0.svg';
     icon.alt = 'Volume Level 0';
-    console.log('hi');
   }
 });
 
