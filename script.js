@@ -2,7 +2,12 @@
 
 const img = new Image(); // used to load image from <input> and draw to canvas
 const canvas = document.getElementById('user-image');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');  
+
+const generateBtn = document.querySelector('button[type=submit]');
+const readTextBtn = document.querySelector('button[type=button]');
+const clearBtn = document.querySelector('button[type=reset]');
+
 let textTop;
 let textBottom;
 let voiceSelect = document.getElementById('voice-selection');
@@ -26,29 +31,28 @@ function populateVoiceList() {
 
     if (voices[i].default) {
       option.textContent += ' -- DEFAULT';
-    }
+    };
 
     option.setAttribute('data-lang', voices[i].lang);
     option.setAttribute('data-name', voices[i].name);
     voiceSelect.appendChild(option);
-  }
+  };
 
   // remove the voice not available option (not from mozilla docs)
-
   if (voices.length > 0) {
     let noVoiceOption = document.querySelector('option[value=none]');
     noVoiceOption.remove();
-  }
-}
+  };
+};
 
 populateVoiceList();
 if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
   speechSynthesis.onvoiceschanged = populateVoiceList;
-}
+};
 
 // Fires whenever the img object loads a new image (such as with img.src =)
+
 img.addEventListener('load', () => {
-  // TODO 
 
   // clear context 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -58,6 +62,10 @@ img.addEventListener('load', () => {
   ctx.fillStyle = 'black';
   ctx.fill();
 
+  // toggle buttons 
+  generateBtn.disabled = false;
+  clearBtn.disabled = true;
+  readTextBtn.disabled = true;
 
   // generated correct dimensions for image 
   let dim = getDimmensions(canvas.width, canvas.height, img.width, img.height);
@@ -70,18 +78,12 @@ img.addEventListener('load', () => {
   // draw image on canvas
   ctx.drawImage(img, startX, startY, width, height);
 
-
   // reset form for new image 
-  const form = document.getElementById('generate-meme');
   form.reset();
-
-  // Some helpful tips:
-  // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
-  // - Clear the form when a new image is selected
-  // - If you draw the image to canvas here, it will update as soon as a new image is selected
 });
 
 // updates img.src and img.alt when new image uploaded 
+
 const imgInput = document.getElementById('image-input');
 
 imgInput.addEventListener('change', () => {
@@ -97,70 +99,85 @@ imgInput.addEventListener('change', () => {
 
 });
 
-// generate is enabled until pressed --> clear, read text enabled
-// clear is enabled until pressed --> read text disabled, generate enabled 
+// generates meme 
 
-const generateBtn = document.querySelector('button[type=submit]');
-const readTextBtn = document.querySelector('button[type=button]');
+const form = document.getElementById('generate-meme');
 
-generateBtn.addEventListener('click', function (event) {
+form.addEventListener('submit', function (event) {
   event.preventDefault();
 
   generateBtn.disabled = true;
   clearBtn.disabled = false;
-  readBtn.disabled = false;
+  readTextBtn.disabled = false;
 
   // don't have to draw black bars (not drawn in no text example in vid)
-
   textTop = document.getElementById('text-top').value;
   textBottom = document.getElementById('text-bottom').value;
   ctx.font = "30px Arial";
   ctx.textAlign = "center";
   ctx.strokeText(textTop, canvas.width / 2, 30);
   ctx.strokeText(textBottom, canvas.width / 2, canvas.height - 20);
+
 });
 
-const clearBtn = document.querySelector('button[type=reset]');
+// clear canvas
+
 clearBtn.addEventListener('click', () => {
   clearBtn.disabled = true;
   generateBtn.disabled = false;
-  readBtn.disabled = true;
+  readTextBtn.disabled = true;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
+// read text
 
 var synth = window.speechSynthesis;
 
-const readBtn = document.querySelector('button[type=button]');
 const volumeLevel = document.querySelector('input[type=range]');
 
-readBtn.addEventListener('click', () => {
+readTextBtn.addEventListener('click', () => {
 
   // create utterance from the text from top and bottom text fields
-
   var utterThis = new SpeechSynthesisUtterance(textTop + " " + textBottom);
 
   // assign correct voice for utterance (mozilla docs)
-
   var selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
   for (let i = 0; i < voices.length; i++) {
     if (voices[i].name === selectedOption) {
       utterThis.voice = voices[i];
-    }
-  }
+    };
+  };
 
   // assign volume level
-
   utterThis.volume = volumeLevel.value / 100;
 
   // speak utterance
-
   synth.speak(utterThis);
-
 
 });
 
+// change volume icons depending on volume level
+
+volumeLevel.addEventListener('input', () => {
+  let vol = volumeLevel.value;
+  let icon = document.querySelector('img');
+
+  if (vol >= 67 && vol <= 100) {
+    icon.src = 'icons/volume-level-3.svg';
+    icon.alt = 'Volume Level 3';
+  } else if (vol >= 34 && vol <= 66){
+    icon.src = 'icons/volume-level-2.svg';
+    icon.alt = 'Volume Level 2';
+  } else if (vol >= 1 && vol <= 33){
+    icon.src = 'icons/volume-level-1.svg';
+    icon.alt = 'Volume Level 1';
+  } else {
+    icon.src = 'icons/volume-level-0.svg';
+    icon.alt = 'Volume Level 0';
+    console.log('hi');
+  }
+});
 
 /**
  * Takes in the dimensions of the canvas and the new image, then calculates the new
